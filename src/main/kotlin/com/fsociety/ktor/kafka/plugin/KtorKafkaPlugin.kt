@@ -3,7 +3,6 @@ package com.fsociety.ktor.kafka.plugin
 import com.fsociety.ktor.kafka.core.consumer.KtorKafkaConsumer
 import com.fsociety.ktor.kafka.core.consumer.manager.KtorKafkaConsumerManager
 import com.fsociety.ktor.kafka.core.registration.KafkaRegistrationHandler
-import com.fsociety.ktor.kafka.plugin.config.KtorKafkaPluginConfiguration
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStarted
 import io.ktor.server.application.ApplicationStopping
@@ -13,6 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlin.coroutines.CoroutineContext
+import com.fsociety.ktor.kafka.plugin.config.KtorKafkaPluginConfiguration.Builder as KtorKafkaPluginBuilder
 
 class KtorKafkaPlugin : CoroutineScope {
     private val job = Job()
@@ -36,15 +36,15 @@ class KtorKafkaPlugin : CoroutineScope {
     ) = consumerManager.create(id, consumer, listener)
 
     companion object Plugin :
-        BaseApplicationPlugin<Application, KtorKafkaPluginConfiguration.Builder, KtorKafkaPlugin> {
+        BaseApplicationPlugin<Application, KtorKafkaPluginBuilder, KtorKafkaPlugin> {
         override val key: AttributeKey<KtorKafkaPlugin>
-            get() = AttributeKey<KtorKafkaPlugin>(KtorKafkaPlugin::class.java.name)
+            get() = AttributeKey<KtorKafkaPlugin>(KtorKafkaPlugin::class.java.canonicalName)
 
         override fun install(
             pipeline: Application,
-            configure: KtorKafkaPluginConfiguration.Builder.() -> Unit,
+            configure: KtorKafkaPluginBuilder.() -> Unit,
         ): KtorKafkaPlugin {
-            val config = KtorKafkaPluginConfiguration.Builder(pipeline)
+            val config = KtorKafkaPluginBuilder(pipeline)
                 .apply(configure)
                 .build()
 
