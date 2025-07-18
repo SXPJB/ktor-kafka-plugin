@@ -2,7 +2,9 @@ package com.fsociety.ktor.kafka.plugin
 
 import com.fsociety.ktor.kafka.core.consumer.KtorKafkaConsumer
 import com.fsociety.ktor.kafka.core.consumer.manager.KtorKafkaConsumerManager
+import com.fsociety.ktor.kafka.core.producer.KtorKafkaProducer
 import com.fsociety.ktor.kafka.core.registration.KafkaRegistrationHandler
+import com.fsociety.ktor.kafka.core.registration.manager.KtorKafkaProducerManager
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStarted
 import io.ktor.server.application.ApplicationStopping
@@ -14,12 +16,13 @@ import kotlinx.coroutines.Job
 import kotlin.coroutines.CoroutineContext
 import com.fsociety.ktor.kafka.plugin.config.KtorKafkaPluginConfiguration.Builder as KtorKafkaPluginBuilder
 
-class KtorKafkaPlugin : CoroutineScope {
-    private val job = Job()
+class KtorKafkaPlugin(
+    private val job: Job = Job(),
+    private val consumerManager: KtorKafkaConsumerManager = KtorKafkaConsumerManager(),
+    private val producerManager: KtorKafkaProducerManager = KtorKafkaProducerManager(),
+) : CoroutineScope {
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
-
-    private val consumerManager = KtorKafkaConsumerManager()
 
     fun start() {
         consumerManager.startAll(this)
@@ -27,6 +30,7 @@ class KtorKafkaPlugin : CoroutineScope {
 
     fun stop() {
         consumerManager.stopAll()
+        producerManager.closeAll()
     }
 
     fun <K, V> addConsumer(
@@ -34,6 +38,13 @@ class KtorKafkaPlugin : CoroutineScope {
         consumer: KtorKafkaConsumer<K, V>,
         listener: (K, V) -> Unit,
     ) = consumerManager.create(id, consumer, listener)
+
+    fun <K, V> addProducer(
+        id: String,
+        producer: KtorKafkaProducer<K, V>,
+    ) {
+        producerManager.create(id, producer)
+    }
 
     companion object Plugin :
         BaseApplicationPlugin<Application, KtorKafkaPluginBuilder, KtorKafkaPlugin> {

@@ -2,6 +2,7 @@ package com.fsociety.ktor.kafka.core.registration
 
 import com.fsociety.ktor.kafka.common.model.KafkaRegistration
 import com.fsociety.ktor.kafka.common.model.KtorKafkaConsumerRegistration
+import com.fsociety.ktor.kafka.common.model.KtorKafkaProducerRegistration
 import com.fsociety.ktor.kafka.plugin.KtorKafkaPlugin
 
 class KafkaRegistrationHandler(
@@ -10,17 +11,27 @@ class KafkaRegistrationHandler(
 
     fun <K, V> handle(registration: KafkaRegistration<K, V>) {
         when (registration) {
-            is KtorKafkaConsumerRegistration -> registerConsumer(registration)
+            is KtorKafkaConsumerRegistration -> add(registration)
+            is KtorKafkaProducerRegistration -> add(registration)
         }
     }
 
-    private fun <K, V> registerConsumer(
-        registration: KtorKafkaConsumerRegistration<K, V>,
+    private fun <K, V> add(
+        ktorKafkaConsumer: KtorKafkaConsumerRegistration<K, V>,
     ) {
         plugin.addConsumer(
-            id = registration.id,
-            consumer = registration.ktorKafkaConsumer,
-            listener = registration.listener,
+            id = ktorKafkaConsumer.id,
+            consumer = ktorKafkaConsumer.ktorKafkaConsumer,
+            listener = ktorKafkaConsumer.listener,
+        )
+    }
+
+    private fun <K, V> add(
+        ktorKafkaProducer: KtorKafkaProducerRegistration<K, V>,
+    ) {
+        plugin.addProducer(
+            id = ktorKafkaProducer.id,
+            producer = ktorKafkaProducer.ktorKafkaProducer,
         )
     }
 }
