@@ -44,7 +44,7 @@ class KtorKafkaPlugin : CoroutineScope {
             pipeline: Application,
             configure: KtorKafkaPluginBuilder.() -> Unit,
         ): KtorKafkaPlugin {
-            val config = KtorKafkaPluginBuilder(pipeline)
+            val config = KtorKafkaPluginBuilder(pipeline.environment)
                 .apply(configure)
                 .build()
 
