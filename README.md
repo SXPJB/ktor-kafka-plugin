@@ -21,12 +21,20 @@ Add the dependency to your `build.gradle.kts` file:
 ```kotlin
 implementation("com.fsociety.ktor:ktor-kafka-plugin:0.0.1-ALPHA")
 ```
+No release yet, soo soon.
 
 ## Usage
 
 ### Basic Setup
 
 Here's a simple example of how to use the Ktor Kafka Plugin:
+
+> **Note:** You'll need to import the following classes:
+> - `com.fsociety.ktor.kafka.plugin.KtorKafkaPlugin`
+> - `io.ktor.server.application.install`
+> - `io.ktor.server.engine.embeddedServer`
+> - `io.ktor.server.netty.Netty`
+> - `org.apache.kafka.common.serialization.StringDeserializer`
 
 ```kotlin
 fun main() {
@@ -39,9 +47,11 @@ fun main() {
 
             // Configure a consumer
             consumer {
-                topics = listOf("my-topic")
-                valueDeserializer = StringDeserializer()
-                keyDeserializer = StringDeserializer()
+                configure {
+                    topics = listOf("my-topic")
+                    valueDeserializer = StringDeserializer::class
+                    keyDeserializer = StringDeserializer::class
+                }
 
                 // Define what happens when a message is received
                 listener { key, value ->
@@ -65,17 +75,40 @@ fun main() {
 
 You can configure multiple consumers with different settings:
 
+> **Note:** In addition to the imports from the basic example, you'll need:
+> - `org.apache.kafka.clients.consumer.ConsumerConfig`
+> - `com.fsociety.ktor.kafka.serialization.json.JsonDeserializer`
+> - `com.fsociety.ktor.kafka.serialization.json.JsonSerializer`
+> - `kotlinx.serialization.Serializable`
+> - `kotlinx.serialization.serializer`
+
 ```kotlin
+// First, define your data classes with custom serializers/deserializers
+@Serializable
+data class MyMessage(
+    val id: String,
+    val content: String,
+    val timestamp: Long
+) {
+    // Custom deserializer for MyMessage
+    class MyMessageDeserializer : JsonDeserializer<MyMessage>(serializer())
+
+    // Custom serializer for MyMessage
+    class MyMessageSerializer : JsonSerializer<MyMessage>(serializer())
+}
+
 install(KtorKafkaPlugin) {
     bootstrapServers = "localhost:9092"
 
     // First consumer for string messages
     consumer {
-        id = "string-consumer"  // Optional: provide a custom ID
-        groupId = "string-group"
-        topics = listOf("string-topic")
-        valueDeserializer = StringDeserializer()
-        keyDeserializer = StringDeserializer()
+        configure {
+            id = "string-consumer"  // Optional: provide a custom ID
+            groupId = "string-group"
+            topics = listOf("string-topic")
+            valueDeserializer = StringDeserializer::class
+            keyDeserializer = StringDeserializer::class
+        }
 
         listener { key, value ->
             log.info("String message: $key = $value")
@@ -84,18 +117,28 @@ install(KtorKafkaPlugin) {
 
     // Second consumer for JSON messages
     consumer {
-        id = "json-consumer"
-        groupId = "json-group"
-        topics = listOf("json-topic")
-        valueDeserializer = JsonDeserializer<MyDataClass>()
-        keyDeserializer = StringDeserializer()
+        configure {
+            id = "json-consumer"
+            groupId = "json-group"
+            topics = listOf("json-topic")
+            valueDeserializer = MyMessage.MyMessageDeserializer::class
+            keyDeserializer = StringDeserializer::class
+
+            // Set additional Kafka consumer properties
+            extraProperties = mapOf(
+                ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "latest",
+                ConsumerConfig.MAX_POLL_RECORDS_CONFIG to 100
+            )
+        }
 
         listener { key, value ->
-            log.info("JSON message: $key = ${value.someProperty}")
+            log.info("JSON message: $key = ${value.content}")
         }
     }
 }
 ```
+
+The `extraProperties` map allows you to set any additional Kafka consumer configuration properties beyond the standard ones provided by the plugin. This gives you full control over the underlying Kafka consumer configuration, enabling you to fine-tune its behavior according to your specific requirements. Use the constants from `ConsumerConfig` as keys for type-safe configuration.
 
 ## Configuration Options
 
@@ -106,6 +149,32 @@ install(KtorKafkaPlugin) {
 | bootstrapServers  | Kafka broker addresses (comma-separated list) | Yes      |
 | groupId           | Default consumer group ID                     | Yes      |
 
+### Configuration via application.conf or application.yml
+
+You can configure the plugin using your application's configuration files instead of code:
+
+#### application.conf
+
+```hocon
+ktor {
+  kafka {
+    bootstrap_servers = "localhost:9092"
+    groupId = "my-consumer-group"
+  }
+}
+```
+
+#### application.yml
+
+```yaml
+ktor:
+  kafka:
+    bootstrap_servers: "localhost:9092"
+    groupId: "my-consumer-group"
+```
+
+When using configuration files, you can omit these properties in your code as they will be automatically loaded from the configuration.
+
 ### Consumer Level
 
 | Option            | Description                                   | Required | Default       |
@@ -114,13 +183,14 @@ install(KtorKafkaPlugin) {
 | bootstrapServers  | Override the plugin-level setting             | No       | Plugin value  |
 | groupId           | Override the plugin-level setting             | No       | Plugin value  |
 | topics            | List of topics to subscribe to                | Yes      | -             |
-| keyDeserializer   | Deserializer for message keys                 | Yes      | -             |
-| valueDeserializer | Deserializer for message values               | Yes      | -             |
+| keyDeserializer   | Class reference for message key deserializer  | Yes      | -             |
+| valueDeserializer | Class reference for message value deserializer| Yes      | -             |
+| extraProperties   | Map of additional Kafka consumer properties   | No       | Empty map     |
 | listener          | Function to process received messages         | Yes      | -             |
 
 ## Testing
 
-For information on how to test Kafka consumers, please refer to the [Testing Guide](src/test/kotlin/com/fsociety/ktor/kafka/core/consumer/TESTING_GUIDE.md).
+TODO: Write this part
 
 ## Building & Running
 
