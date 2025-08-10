@@ -1,16 +1,26 @@
-package com.fsociety.ktor.kafka.core.builder
+package com.fsociety.ktor.kafka.consumer.builder
 
-import com.fsociety.ktor.kafka.common.model.KtorKafkaConsumerRegistration
-import com.fsociety.ktor.kafka.common.model.config.KtorKafkaConfig
-import com.fsociety.ktor.kafka.common.model.config.KtorKafkaConsumerConfig
-import com.fsociety.ktor.kafka.core.consumer.KtorKafkaConsumer
+import com.fsociety.ktor.kafka.config.KtorKafkaConfig
+import com.fsociety.ktor.kafka.config.KtorKafkaConsumerConfig
+import com.fsociety.ktor.kafka.consumer.KtorKafkaConsumer
+import com.fsociety.ktor.kafka.shared.KtorKafkaConsumerSpec
 import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import java.util.Properties
 
+/**
+ * Builder class for creating and configuring a Kafka consumer using the Ktor Kafka integration framework.
+ *
+ * @param K The type of keys in Kafka messages.
+ * @param V The type of values in Kafka messages.
+ * @constructor Initializes the builder with the given `KtorKafkaConfig`.
+ *
+ * @property pluginConfig A configuration object that provides fallback values for bootstrap servers
+ * and group ID if not explicitly set in the consumer configuration.
+ */
 class KafkaKtorConsumerBuilder<K, V>(
-    private val pluginConfig: KtorKafkaConfig<K, V>,
+    private val pluginConfig: KtorKafkaConfig,
 ) {
     private var config: KtorKafkaConsumerConfig<K, V> = KtorKafkaConsumerConfig()
     private var listener: ((K, V) -> Unit)? = null
@@ -23,14 +33,18 @@ class KafkaKtorConsumerBuilder<K, V>(
         this.listener = listener
     }
 
-    fun property(props: Map<ConsumerConfig, Any>) {
-        config.extraProperties.plus(props)
+    fun property(props: Map<String, Any>) {
+        config = config.copy(extraProperties = config.extraProperties + props)
     }
 
-    internal fun build(): KtorKafkaConsumerRegistration<K, V> {
+    fun property(vararg pairs: Pair<String, Any>) {
+        property(pairs.toMap())
+    }
+
+    internal fun build(): KtorKafkaConsumerSpec<K, V> {
         config = requireValidConfig()
 
-        return KtorKafkaConsumerRegistration(
+        return KtorKafkaConsumerSpec(
             id = config.id,
             listener = requireNotNull(listener) { LISTENER_NULL_MESSAGE },
             ktorKafkaConsumer = KtorKafkaConsumer(

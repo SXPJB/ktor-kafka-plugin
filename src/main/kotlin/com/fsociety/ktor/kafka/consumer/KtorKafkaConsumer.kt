@@ -1,6 +1,6 @@
-package com.fsociety.ktor.kafka.core.consumer
+package com.fsociety.ktor.kafka.consumer
 
-import com.fsociety.ktor.kafka.common.utils.logger
+import com.fsociety.ktor.kafka.utils.logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -68,8 +68,8 @@ class KtorKafkaConsumer<K, V>(
     }
 
     companion object {
-        private const val CONSUMER_ALREADY_RUNNING_EVENT = "Kafka consumer is already running for topics: '{}'"
-        private const val ERROR_CONSUMING_MESSAGES_EVENT = "Failed to process Kafka messages: '{}'"
+        private const val CONSUMER_ALREADY_RUNNING_EVENT = "Kafka consumer is already running for topics: {}"
+        private const val ERROR_CONSUMING_MESSAGES_EVENT = "Failed to process Kafka messages: {}"
         private const val STOP_CONSUMING_MESSAGES_EVENT = "Stopping Kafka consumer and closing connection"
         private val POLL_DURATION = Duration.ofMillis(100L)
     }

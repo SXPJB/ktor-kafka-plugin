@@ -3,6 +3,7 @@ val kotlinVersion: String by project
 val logbackVersion: String by project
 val arrowVersion: String by project
 val kafkaVersion: String by project
+val kotestVersion: String by project
 
 plugins {
     kotlin("jvm") version "2.1.10"
@@ -13,7 +14,7 @@ plugins {
     id("java-library")
 }
 
-group = "com.fsociety.ktor"
+group = "com.fsociety.ktor.pluging"
 version = "0.0.1-ALPHA"
 
 repositories {
@@ -35,11 +36,22 @@ dependencies {
     implementation("org.apache.kafka:kafka-clients:$kafkaVersion")
     implementation("org.apache.kafka:kafka-streams:$kafkaVersion")
 
-    implementation("io.ktor:ktor-server-netty")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
+
+    // kotest
+    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+    testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
+    testImplementation("io.kotest:kotest-property:$kotestVersion")
+
+    // mocking
+    testImplementation("io.mockk:mockk:1.13.13")
 
     testImplementation("io.ktor:ktor-server-test-host")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 tasks.register<Jar>("sourceJar") {

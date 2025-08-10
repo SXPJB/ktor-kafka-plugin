@@ -1,6 +1,6 @@
 package com.fsociety.ktor.kafka.serialization.json
 
-import com.fsociety.ktor.kafka.common.utils.logger
+import com.fsociety.ktor.kafka.utils.logger
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
@@ -26,7 +26,7 @@ private const val ERROR_DESERIALIZATION_EVENT = "Json can't be deserialized"
 open class JsonDeserializer<T>(
     private val serializer: KSerializer<T>,
     val json: Json = Json {
-        namingStrategy = JsonNamingStrategy.Builtins.SnakeCase
+        namingStrategy = JsonNamingStrategy.SnakeCase
     },
 ) : Deserializer<T> {
 

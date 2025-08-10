@@ -14,6 +14,15 @@ The Ktor Kafka Plugin provides a simple and idiomatic way to integrate Kafka con
 - 🔌 **Multiple Consumers**: Support for multiple Kafka consumers with different configurations
 - 🧵 **Coroutine Support**: Built with Kotlin coroutines for non-blocking message processing
 
+### What’s new (latest refactor)
+- Refactored package structure for clearer separation of concerns (config, consumer, plugin, utils)
+- New configuration classes: KtorKafkaConfig, KtorKafkaPluginConfiguration, KtorKafkaConsumerConfig
+- New consumer management: KtorKafkaConsumerManager with KtorKafkaConsumerWrapper
+- Simplified registration via DSL (consumer { configure { ... } listener { ... } })
+- Removed legacy registration/manager classes; updated plugin wiring
+- JSON Serializer/Deserializer utilities improved (kotlinx.serialization based)
+- Added shared specs and unit tests to cover builder, manager, and plugin lifecycle
+
 ## Installation
 
 Add the dependency to your `build.gradle.kts` file:
@@ -21,7 +30,7 @@ Add the dependency to your `build.gradle.kts` file:
 ```kotlin
 implementation("com.fsociety.ktor:ktor-kafka-plugin:0.0.1-ALPHA")
 ```
-No release yet, soo soon.
+No release yet; coming soon.
 
 ## Usage
 
@@ -190,7 +199,13 @@ When using configuration files, you can omit these properties in your code as th
 
 ## Testing
 
-TODO: Write this part
+- Run all tests: `./gradlew test`
+- What’s covered:
+  - Builder validation and spec creation (KafkaKtorConsumerBuilderTest)
+  - Consumer manager lifecycle (KtorKafkaConsumerManagerTest)
+  - Plugin install/start/stop hooks (KtorKafkaPluginTest)
+
+If you add new DSL or lifecycle features, please include matching tests to keep coverage healthy.
 
 ## Building & Running
 

@@ -1,13 +1,13 @@
 package com.fsociety.ktor.kafka.serialization.json
 
-import com.fsociety.ktor.kafka.common.utils.logger
+import com.fsociety.ktor.kafka.utils.logger
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import org.apache.kafka.common.serialization.Serializer
 
-private const val ERROR_SERIALIZATION_EVENT = "Json can't be deserialized"
+private const val ERROR_SERIALIZATION_EVENT = "JSON serialization failed"
 
 /**
  * A serializer implementation that serializes objects of type [T] into JSON format using kotlinx.serialization.
@@ -23,7 +23,7 @@ private const val ERROR_SERIALIZATION_EVENT = "Json can't be deserialized"
 open class JsonSerializer<T>(
     private val serializer: KSerializer<T>,
     private val json: Json = Json {
-        namingStrategy = JsonNamingStrategy.Builtins.SnakeCase
+        namingStrategy = JsonNamingStrategy.SnakeCase
     },
 ) : Serializer<T> {
 
@@ -37,7 +37,6 @@ open class JsonSerializer<T>(
     }
 
     private fun encode(data: T): ByteArray {
-        return json.encodeToString(serializer, data)
-            .toByteArray(Charsets.UTF_8)
+        return json.encodeToString(serializer, data).encodeToByteArray()
     }
 }
