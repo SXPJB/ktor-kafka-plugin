@@ -3,6 +3,7 @@ package com.fsociety.ktor.kafka.plugin
 import com.fsociety.ktor.kafka.config.KtorKafkaPluginConfiguration
 import com.fsociety.ktor.kafka.consumer.manager.KtorKafkaConsumerManager
 import com.fsociety.ktor.kafka.shared.KtorKafkaConsumerSpec
+import com.fsociety.ktor.kafka.shared.KtorKafkaProducerSpec
 import com.fsociety.ktor.kafka.utils.logger
 import io.ktor.server.application.ApplicationStarted
 import io.ktor.server.application.ApplicationStopping
@@ -47,6 +48,10 @@ val KtorKafkaPlugin = createApplicationPlugin(
             when (registration) {
                 is KtorKafkaConsumerSpec<*, *> -> {
                     consumerManager.register(registration)
+                }
+
+                is KtorKafkaProducerSpec<*, *> -> {
+
                 }
             }
         }
